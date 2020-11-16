@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from torchvision.models import resnet34,resnet18
+from torchvision.models import resnet34, resnet18, resnet50
 
 
 class YOLOv1(nn.Module):
@@ -22,15 +22,15 @@ class YOLOv1(nn.Module):
             nn.Conv2d(1024, 1024, 3, padding=1),
             nn.BatchNorm2d(1024),
             nn.LeakyReLU(),
-            nn.Conv2d(1024, 512, 3, padding=1),
-            nn.BatchNorm2d(512),
+            nn.Conv2d(1024, 256, 3, padding=1),
+            nn.BatchNorm2d(256),
             nn.LeakyReLU()
         )
         self.fc_layers = nn.Sequential(
-            nn.Linear(7*7*512, 2048),
+            nn.Linear(7*7*256, 1024),
             nn.LeakyReLU(),
-            nn.Linear(2048, 7*7*(self.B*5+self.nb_classes)),
-            nn.Sigmoid() # must add 0~1
+            nn.Linear(1024, 7*7*(self.B*5+self.nb_classes)),
+            nn.Sigmoid()  # must add 0~1
         )
 
     def forward(self, x):

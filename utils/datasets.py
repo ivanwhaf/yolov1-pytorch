@@ -6,19 +6,7 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data import random_split
 from torchvision import transforms
-
-B = 2
-NB_CLASSES=10
-
-def xywhc2label(bboxs):
-    label = np.zeros((7, 7, 5*B+NB_CLASSES))
-    for x, y, w, h, c in bboxs:
-        x_grid = int(x//(1/7))
-        y_grid = int(y//(1/7))
-        label[x_grid][y_grid][0:5] = np.array([x, y, w, h, 1])
-        label[x_grid][y_grid][5:10] = np.array([x, y, w, h, 1])
-        label[x_grid][y_grid][10:10+c-1] = 1
-    return label
+from .util import xywhc2label
 
 
 class YOLODataset(Dataset):
@@ -33,7 +21,7 @@ class YOLODataset(Dataset):
 
     def __getitem__(self, idx):
         img = cv2.imread(os.path.join(self.img_path, self.filenames[idx]))
-
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # image's original weight and height
         ori_width, ori_height = img.shape[1], img.shape[0]
 

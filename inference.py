@@ -4,6 +4,8 @@ import random
 
 COLORS = [[random.randint(0, 255) for _ in range(3)] for _ in range(10)]
 
+def predict():
+    pass
 
 def draw_bbox():
     imgs = os.listdir('dataset/NWPU VHR-10 dataset/positive image set')
