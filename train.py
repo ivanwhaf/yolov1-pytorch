@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from torchvision import utils
 from torch.optim import SGD, Adam
 # from torchviz import make_dot
+from models import build_model
 from utils.util import YOLOLoss, parse_cfg
 from utils.datasets import create_dataloader
 
@@ -43,7 +44,7 @@ def train(model, train_loader, optimizer, epoch, device, train_loss_lst):
                           100. * batch_idx / len(train_loader), loss.item()))
 
     # record training loss
-    train_loss /= len(train_loader.dataset)
+    train_loss /= len(train_loader)
     train_loss_lst.append(train_loss)
     return train_loss_lst
 
@@ -61,7 +62,7 @@ def validate(model, val_loader, device, val_loss_lst):
             criterion = YOLOLoss()
             val_loss += criterion(output, target).item()
 
-    val_loss /= len(val_loader.dataset)
+    val_loss /= len(val_loader)
     print('\nVal set: Average loss: {:.4f}'.format(val_loss))
 
     # record validating loss
@@ -83,7 +84,7 @@ def test(model, test_loader, device):
             test_loss += criterion(output, target).item()
 
     # record testing loss
-    test_loss /= len(test_loader.dataset)
+    test_loss /= len(test_loader)
     print('Test set: Average loss: {:.4f}'.format(test_loss))
 
 
@@ -101,9 +102,9 @@ def arg_parse():
     parser.add_argument("--data", "-d", dest='data', default="cfg/dataset.cfg",
                         help="Your dataset config file path", type=str)
 
-    parser.add_argument("--weights", "-w", dest='weights', default="weights/yolov1.pth",
+    parser.add_argument("--weights", "-w", dest='weights', default="",
                         help="Path of pretrained weights", type=str)
-    
+
     parser.add_argument("--output", "-o", dest='output', default="output",
                         help="Output file path", type=str)
 
@@ -113,7 +114,7 @@ def arg_parse():
     parser.add_argument("--lr", "-lr", dest='lr', default=0.0001,
                         help="Training learning rate", type=float)
 
-    parser.add_argument("--batch_size", "-b", dest='batch_size', default=4,
+    parser.add_argument("--batch_size", "-b", dest='batch_size', default=32,
                         help="Training batch size", type=int)
 
     parser.add_argument("--input_size", "-i", dest='input_size', default=448,
@@ -141,7 +142,7 @@ if __name__ == "__main__":
     # device = "cpu"
 
     # build model
-    model = YOLOv1(B=2, nb_classes=10).to(device)
+    model = build_model(weights, cfg).to(device)
 
     # plot model structure
     # graph = make_dot(model(torch.rand(1, 3, input_size, input_size).cuda()),
@@ -171,7 +172,7 @@ if __name__ == "__main__":
 
     test(model, test_loader, device)
 
-    # plot loss and accuracy, save params change
+    # plot loss, save params change
     fig = plt.figure()
     plt.plot(range(epochs), train_loss_lst, 'g', label='train loss')
     plt.plot(range(epochs), val_loss_lst, 'k', label='val loss')

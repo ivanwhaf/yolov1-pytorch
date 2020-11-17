@@ -23,7 +23,7 @@ $ python detect.py -c cfg/yolov1.cfg -d cfg/dataset.cfg -w weights/yolov1.pth --
 # Usage
 ## Preparation
 * 1.Create an empty folder (in this project was `dataset` folder) as your dataset folder
-* 2.Prepare your own datasets, you shold move images folder and labels folder into dataset folder, each image must have corresponding same-name `.txt` label in labels folder, each label has `x,y,w,h,c` five values
+* 2.Prepare your own datasets, you shold move images folder and labels folder into dataset folder, each image must have corresponding same-name `.txt` label in labels folder, each label has `x,y,w,h,c` five values, which respresent center_x, center_y, width, height, class. The coord value should be normalized to `0~1`
 * 3.Your dataset folder should be like this:
 ```
 dataset/
@@ -35,6 +35,11 @@ dataset/
       ├──001.txt
       ├──002.txt
       └──003.txt
+```
+* 4.Your label `.txt` file should be like this:
+```
+0.25326 0.252352 0.1356 0.52452 0
+0.46733 0.662623 0.2654 0.11313 1
 ```
 
 ## Train

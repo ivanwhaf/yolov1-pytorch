@@ -5,66 +5,77 @@ import numpy as np
 B = 2
 NB_CLASSES = 10
 
+
 def xywhc2label(bboxs):
+    # bboxs is a xywhc list: [(x,y,w,h,c),(x,y,w,h,c)....]
     label = np.zeros((7, 7, 5*B+NB_CLASSES))
     for x, y, w, h, c in bboxs:
-        x_grid = int(x//(1/7))
-        y_grid = int(y//(1/7))
-        label[x_grid][y_grid][0:5] = np.array([x, y, w, h, 1])
-        label[x_grid][y_grid][5:10] = np.array([x, y, w, h, 1])
-        label[x_grid][y_grid][10:10+c-1] = 1
+        x_grid = int(x//(1.0/7))
+        y_grid = int(y//(1.0/7))
+        label[x_grid, y_grid, 0:5] = np.array([x, y, w, h, 1])
+        label[x_grid, y_grid, 5:10] = np.array([x, y, w, h, 1])
+        label[x_grid, y_grid, 10+c-1] = 1
     return label
 
 
 def pred2xywhcc(pred):
-    # pred is 1*7*7*(5*B+C) tensor
-    # convert to numpy array
-    # pred = pred.detach().numpy()
-    bbox = torch.zeros((7*7*2, 5+10))  # 98 * 15
+    # pred is a 7*7*(5*B+C) tensor
+    bboxs = torch.zeros((7*7*2, 5+10))  # 98*15
     for x in range(7):
         for y in range(7):
             # bbox1
-            bbox[2*(x*7+y), 0:4] = pred[x, y, 0:4]
-            bbox[2*(x*7+y), 4] = pred[x, y, 4]
-            bbox[2*(x*7+y), 5:] = pred[x, y, 10:]
+            bboxs[2*(x*7+y), 0:4] = pred[x, y, 0:4]
+            bboxs[2*(x*7+y), 4] = pred[x, y, 4]
+            bboxs[2*(x*7+y), 5:] = pred[x, y, 10:]
             # bbox2
-            bbox[2*(x*7+y)+1, 0:4] = pred[x, y, 5:9]
-            bbox[2*(x*7+y)+1, 4] = pred[x, y, 9]
-            bbox[2*(x*7+y)+1, 5:] = pred[x, y, 10:]
-    # NMS
-    xywhcc = nms(bbox)
+            bboxs[2*(x*7+y)+1, 0:4] = pred[x, y, 5:9]
+            bboxs[2*(x*7+y)+1, 4] = pred[x, y, 9]
+            bboxs[2*(x*7+y)+1, 5:] = pred[x, y, 10:]
+    # apply NMS to all bboxs
+    xywhcc = nms(bboxs)
     return xywhcc
 
 
-def nms(bbox, conf_thresh=0.1, iou_thresh=0.3):
-    # Non-Maximum Suppression
-    bbox_prob = bbox[:, 5:].clone()
-    bbox_conf = bbox[:, 4].clone().unsqueeze(1).expand_as(bbox_prob)
-    bbox_cls_spec_conf = bbox_conf*bbox_prob
+def nms(bboxs, conf_thresh=0.1, iou_thresh=0.3):
+    # Non-Maximum Suppression, bboxs is a 98*15 tensor
+    bbox_prob = bboxs[:, 5:].clone()  # 98*10
+    bbox_conf = bboxs[:, 4].clone().unsqueeze(1).expand_as(bbox_prob)  # 98*10
+    bbox_cls_spec_conf = bbox_conf*bbox_prob  # 98*10
     bbox_cls_spec_conf[bbox_cls_spec_conf <= conf_thresh] = 0
 
+    # for each class, sort the cls-spec-conf score
     for c in range(10):
-        rank = torch.sort(bbox_cls_spec_conf[:, c], descending=True).indices
+        rank = torch.sort(
+            bbox_cls_spec_conf[:, c], descending=True).indices  # sort
+        # for each bbox
         for i in range(98):
-            if bbox_cls_spec_conf[rank[i], c] != 0:
-                for j in range(i+1, 98):
-                    if bbox_cls_spec_conf[rank[j], c] != 0:
-                        iou = calculate_iou(
-                            bbox[rank[i], 0:4], bbox[rank[j], 0:4])
-                        if iou > iou_thresh:
-                            bbox_cls_spec_conf[rank[j], c] = 0
+            if bbox_cls_spec_conf[rank[i], c] == 0:
+                continue
+            for j in range(i+1, 98):
+                if bbox_cls_spec_conf[rank[j], c] != 0:
+                    iou = calculate_iou(
+                        bboxs[rank[i], 0:4], bboxs[rank[j], 0:4])
+                    if iou > iou_thresh:
+                        bbox_cls_spec_conf[rank[j], c] = 0
 
     # exclude cls-specific confidence score=0
-    bbox = bbox[torch.max(bbox_cls_spec_conf, dim=1).values > 0]
+    bboxs = bboxs[torch.max(bbox_cls_spec_conf, dim=1).values > 0]
 
     bbox_cls_spec_conf = bbox_cls_spec_conf[torch.max(
         bbox_cls_spec_conf, dim=1).values > 0]
 
-    res = torch.ones((bbox.size()[0], 6))
-    res[:, 0:4] = bbox[:, 0:4]  # bbox coord
-    res[:, 6] = torch.argmax(bbox[:, 5:], dim=1).int()  # bbox class
+    res = torch.ones((bboxs.size()[0], 6))
+
+    # return null
+    if bboxs.size[0] == 0:
+        return torch.tensor([])
+
+    # bbox coord
+    res[:, 0:4] = bboxs[:, 0:4]
     # bbox class-specific confidence scores
-    res[:, 5] = torch.max(bbox_cls_spec_conf, dim=1).values
+    res[:, 4] = torch.max(bbox_cls_spec_conf, dim=1).values
+    # bbox class
+    res[:, 5] = torch.argmax(bboxs[:, 5:], dim=1).int()
     return res
 
 
@@ -72,9 +83,9 @@ def calculate_iou(bbox1, bbox2):
     # bbox: x y w h
     bbox1, bbox2 = bbox1.cpu().detach().numpy(
     ).tolist(), bbox2.cpu().detach().numpy().tolist()
-    # print(bbox1,bbox2)
-    area1 = bbox1[2]*bbox1[3]
-    area2 = bbox2[2]*bbox2[3]
+
+    area1 = bbox1[2]*bbox1[3]  # bbox1's area
+    area2 = bbox2[2]*bbox2[3]  # bbox2's area
 
     max_left = max(bbox1[0]-bbox1[2]/2, bbox2[0]-bbox2[2]/2)
     min_right = min(bbox1[0]+bbox1[2]/2, bbox2[0]+bbox2[2]/2)
@@ -84,6 +95,7 @@ def calculate_iou(bbox1, bbox2):
     if max_left >= min_right or max_top >= min_bottom:
         return 0
     else:
+        # iou = intersect / union
         intersect = (min_right-max_left)*(min_bottom-max_top)
         return (intersect / area1+area2-intersect)
 
@@ -94,16 +106,16 @@ class YOLOLoss(nn.Module):
 
     def forward(self, preds, labels):
         batch_size = labels.size()[0]
-        # feature_map_size = labels.size()[1] # S
+
         loss_coord_xy = 0  # coord xy loss
         loss_coord_wh = 0  # coord wh loss
         loss_obj = 0  # obj loss
         loss_noobj = 0  # noobj loss
-        loss_class = 0  # classes loss
+        loss_class = 0  # class loss
+
         for n in range(batch_size):
             for x in range(7):
                 for y in range(7):
-
                     # this region has object
                     if labels[n, x, y, 4] == 1:
                         # calculate iou of two bbox
@@ -152,15 +164,16 @@ class YOLOLoss(nn.Module):
                         loss_noobj += 0.5 * \
                             torch.sum(preds[n, x, y, [4, 9]]**2)
 
+                    # end labels have object
                 # end for y
             # end for x
         # end for batchsize
 
-        # print(loss_coord_xy)
-        # print(loss_coord_wh)
-        # print(loss_obj)
-        # print(loss_noobj)
-        # print(loss_class)
+        # print('loss_coord_xy', loss_coord_xy)
+        # print('loss_coord_wh', loss_coord_wh)
+        # print('loss_coord_wh', loss_obj)
+        # print('loss_coord_wh', loss_noobj)
+        # print('loss_coord_wh', loss_class)
 
         loss = loss_coord_xy + loss_coord_wh + loss_obj + \
             loss_noobj + loss_class  # five loss terms

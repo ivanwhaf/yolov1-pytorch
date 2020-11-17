@@ -29,11 +29,12 @@ class YOLODataset(Dataset):
         img = self.transforms(img)
 
         xywhc = []
+        # read each image's corresponding label .txt
         with open(os.path.join(self.label_path, self.filenames[idx].split('.')[0]+'.txt'), 'r') as f:
             lines = f.readlines()
             for line in lines:
                 if line == '\n':
-                    break
+                    continue
                 # process label
                 line = line.replace('(', '').replace(')', '').replace(
                     ' ', '').strip().split(',')
@@ -45,14 +46,13 @@ class YOLODataset(Dataset):
                 # x1 y1 x2 y2 --> x y w h
                 x, y, w, h = int((x1+x2)/2), int((y1+y2)/2), x2-x1, y2-y1
 
-                # x y w h normalize to 0~1
+                # x y w h normalized to 0~1
                 x, y, w, h = x / ori_width, y/ori_height, w/ori_width, h/ori_height
 
                 xywhc.append([x, y, w, h, c])
 
-        # print('xywhc:', xywhc)
+        # xywhc list convert to label
         label = xywhc2label(xywhc)
-        # print('label:', label)
         label = torch.Tensor(label)
         return img, label
 
@@ -62,16 +62,18 @@ def create_dataloader(img_path, laebl_path, train_proportion, val_proportion, te
         transforms.Resize((input_size, input_size)),
         transforms.ToTensor()
     ])
+
     # create yolo dataset
     dataset = YOLODataset(img_path,
                           laebl_path, transforms=transform)
+
     dataset_size = len(dataset)
     train_size = int(dataset_size*train_proportion)
     val_size = int(dataset_size*val_proportion)
     # test_size = int(dataset_size*test_proportion)
     test_size = dataset_size-train_size-val_size
 
-    # split dataset to train val test
+    # split dataset to trainset, valset and testset three parts
     train_dataset, val_dataset, test_dataset = random_split(
         dataset, [train_size, val_size, test_size])
 
