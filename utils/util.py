@@ -12,8 +12,10 @@ def xywhc2label(bboxs):
     for x, y, w, h, c in bboxs:
         x_grid = int(x//(1.0/7))
         y_grid = int(y//(1.0/7))
-        label[x_grid, y_grid, 0:5] = np.array([x, y, w, h, 1])
-        label[x_grid, y_grid, 5:10] = np.array([x, y, w, h, 1])
+        xx = x/(1.0/7)-x_grid
+        yy = y/(1.0/7)-y_grid
+        label[x_grid, y_grid, 0:5] = np.array([xx, yy, w, h, 1])
+        label[x_grid, y_grid, 5:10] = np.array([xx, yy, w, h, 1])
         label[x_grid, y_grid, 10+c-1] = 1
     return label
 
@@ -24,11 +26,14 @@ def pred2xywhcc(pred):
     for x in range(7):
         for y in range(7):
             # bbox1
-            bboxs[2*(x*7+y), 0:4] = pred[x, y, 0:4]
+            bboxs[2*(x*7+y), 0:4] = torch.Tensor(
+                [(pred[x, y, 0]+x)/7, (pred[x, y, 1]+y)/7, pred[x, y, 2], pred[x, y, 3]])
             bboxs[2*(x*7+y), 4] = pred[x, y, 4]
             bboxs[2*(x*7+y), 5:] = pred[x, y, 10:]
+
             # bbox2
-            bboxs[2*(x*7+y)+1, 0:4] = pred[x, y, 5:9]
+            bboxs[2*(x*7+y)+1, 0:4] = torch.Tensor(
+                [(pred[x, y, 5]+x)/7, (pred[x, y, 6]+y)/7, pred[x, y, 7], pred[x, y, 8]])
             bboxs[2*(x*7+y)+1, 4] = pred[x, y, 9]
             bboxs[2*(x*7+y)+1, 5:] = pred[x, y, 10:]
     # apply NMS to all bboxs
@@ -67,7 +72,7 @@ def nms(bboxs, conf_thresh=0.1, iou_thresh=0.3):
     res = torch.ones((bboxs.size()[0], 6))
 
     # return null
-    if bboxs.size[0] == 0:
+    if bboxs.size()[0] == 0:
         return torch.tensor([])
 
     # bbox coord
@@ -97,7 +102,7 @@ def calculate_iou(bbox1, bbox2):
     else:
         # iou = intersect / union
         intersect = (min_right-max_left)*(min_bottom-max_top)
-        return (intersect / area1+area2-intersect)
+        return (intersect / (area1+area2-intersect))
 
 
 class YOLOLoss(nn.Module):
@@ -118,11 +123,20 @@ class YOLOLoss(nn.Module):
                 for y in range(7):
                     # this region has object
                     if labels[n, x, y, 4] == 1:
+                        # convert x,y to x,y
+                        pred_bbox1 = torch.Tensor(
+                            [(preds[n, x, y, 0]+x)/7, (preds[n, x, y, 1]+y)/7, preds[n, x, y, 2], preds[n, x, y, 3]])
+                        pred_bbox2 = torch.Tensor(
+                            [(preds[n, x, y, 5]+x)/7, (preds[n, x, y, 6]+y)/7, preds[n, x, y, 7], preds[n, x, y, 8]])
+                        label_bbox = torch.Tensor(
+                            [(labels[n, x, y, 0]+x)/7, (labels[n, x, y, 1]+y)/7, labels[n, x, y, 2], labels[n, x, y, 3]])
+
                         # calculate iou of two bbox
                         iou1 = calculate_iou(
-                            preds[n, x, y, 0:4], labels[n, x, y, 0:4])
+                            pred_bbox1, label_bbox)
                         iou2 = calculate_iou(
-                            preds[n, x, y, 5:9], labels[n, x, y, 5:9])
+                            pred_bbox2, label_bbox)
+
                         # judge responsible box
                         if iou1 > iou2:
                             # calculate coord xy loss

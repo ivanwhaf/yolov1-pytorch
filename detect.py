@@ -1,4 +1,5 @@
 import os
+import shutil
 import random
 import argparse
 import cv2
@@ -161,17 +162,19 @@ if __name__ == "__main__":
 
     # folder
     elif source == source.split('.')[-1]:
+        # create output folder
+        output = os.path.join(output, source.split('/')[-1])
+        if os.path.exists(output):
+            shutil.rmtree(output)
+            # os.removedirs(output)
+        os.makedirs(output)
+
         imgs = os.listdir(source)
         for img_name in imgs:
+            print(img_name)
             # img = cv2.imread(os.path.join(source, img_name))
             img = cv2.imdecode(np.fromfile(os.path.join(
                 source, img_name), dtype=np.uint8), cv2.IMREAD_COLOR)
-
-            # create output folder
-            output = os.path.join(output, source.split('/')[-1])
-            if os.path.exists(output):
-                os.remove(output)
-            os.makedirs(output)
 
             # predict
             xywhcc = predict_img(img, model, input_size)
@@ -179,8 +182,3 @@ if __name__ == "__main__":
                 img = draw_bbox(img, xywhcc, classes)
                 # save output img
                 cv2.imwrite(os.path.join(output, img_name), img)
-
-            print(img_name)
-            # print('Class name:', class_name, 'Confidence:', str(confidence)+'%')
-            # save output img
-            cv2.imwrite(os.path.join(output, img_name), img)

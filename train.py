@@ -111,7 +111,7 @@ def arg_parse():
     parser.add_argument("--epochs", "-e", dest='epochs', default=100,
                         help="Training epochs", type=int)
 
-    parser.add_argument("--lr", "-lr", dest='lr', default=0.0001,
+    parser.add_argument("--lr", "-lr", dest='lr', default=0.0002,
                         help="Training learning rate", type=float)
 
     parser.add_argument("--batch_size", "-b", dest='batch_size', default=32,
@@ -120,7 +120,7 @@ def arg_parse():
     parser.add_argument("--input_size", "-i", dest='input_size', default=448,
                         help="Image input size", type=int)
 
-    parser.add_argument("--save_freq", "-s", dest='save_freq', default=10,
+    parser.add_argument("--save_freq", "-s", dest='save_freq', default=25,
                         help="Frequency of saving model checkpoints when training", type=int)
 
     return parser.parse_args()
@@ -149,8 +149,8 @@ if __name__ == "__main__":
     #                  params=dict(model.named_parameters()))
     # graph.render('model_structure', './', cleanup=True, format='png')
 
-    # optimizer = SGD(model.parameters(), lr=lr, momentum=0.9)
-    optimizer = Adam(model.parameters(), lr=lr)
+    optimizer = SGD(model.parameters(), lr=lr, momentum=0.9)
+    # optimizer = Adam(model.parameters(), lr=lr)
 
     # create output file folder
     start = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))
@@ -172,6 +172,9 @@ if __name__ == "__main__":
 
     test(model, test_loader, device)
 
+    # save model
+    torch.save(model.state_dict(), os.path.join(output, start, 'last.pth'))
+
     # plot loss, save params change
     fig = plt.figure()
     plt.plot(range(epochs), train_loss_lst, 'g', label='train loss')
@@ -184,5 +187,4 @@ if __name__ == "__main__":
     plt.savefig(os.path.join(output, start, now + '.jpg'))
     plt.show()
 
-    # save model
-    torch.save(model.state_dict(), os.path.join(output, start, 'last.pth'))
+    
