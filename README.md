@@ -1,6 +1,6 @@
 # yolov1-pytorch
 This repo is a pytorch implementation of yolov1.
-* Deep Learning based yolov1 object detector, using `Pytorch` deep learning framwork
+* Deep Learning based yolov1 object detector, using `Pytorch` deep learning framework
 * This project can be also transplanted to other edge platforms like `Raspberry Pi`
 
 # Demo
@@ -17,7 +17,7 @@ $ python detect.py -c cfg/yolov1.cfg -d cfg/dataset.cfg -w weights/yolov1.pth --
 # Usage
 ## Preparation
 * 1.Create an empty folder (in this project was `dataset` folder) as your dataset folder
-* 2.Prepare your own datasets, you shold move images folder and labels folder into dataset folder, each image must have corresponding same-name `.txt` label in labels folder, each label has `x,y,w,h,c` five values, which respresent `center_x, center_y, width, height, class`. The coord value should be normalized to `0~1`
+* 2.Prepare your own datasets, you shold move images folder and labels folder into dataset folder, each image must have corresponding same-name `.txt` label in labels folder, each label has `x,y,w,h,c` five values, which represent `center_x, center_y, width, height, class`. The coord value should be normalized to `0~1`
 * 3.Your dataset folder should be like this:
 ```
 dataset/
