@@ -1,1 +1,1 @@
-from .model import build_model
+from .model import YOLOv1, YOLOv1ResNet

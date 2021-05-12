@@ -7,4 +7,4 @@ pillow
 matplotlib
 
 # ===optional===
-# torchviz
+torchviz
