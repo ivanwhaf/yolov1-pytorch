@@ -38,7 +38,7 @@ def draw_bbox(img, bboxs, class_names):
         class_name = class_names[int(bboxs[i, 5])]
         # confidence = bboxs[i, 4]
         cv2.rectangle(img, p1, p2, color=COLORS[int(bboxs[i, 5])], thickness=2)
-        cv2.putText(img, class_name, p1, cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLORS[int(bboxs[i, 5])])
+        cv2.putText(img, class_name, p1, cv2.FONT_HERSHEY_SIMPLEX, 0.8, COLORS[int(bboxs[i, 5])])
     return img
 
 

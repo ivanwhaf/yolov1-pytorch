@@ -10,7 +10,7 @@ This repo is a pytorch implementation of yolov1.
 
 ## Run in command line
 
-detect.py runs inference on a variety of sources, cd your project path and type:
+*detect.py* runs inference on a variety of sources, cd your project path and type:
 
 ```bash
 $ python detect.py -c cfg/yolov1.cfg -d cfg/dataset.cfg -w weights/yolov1.pth --source 0  # webcam
@@ -27,7 +27,7 @@ $ python detect.py -c cfg/yolov1.cfg -d cfg/dataset.cfg -w weights/yolov1.pth --
 ## Preparation
 
 * 1.Create an empty folder (in this project was `dataset` folder) as your dataset folder
-* 2.Prepare your own datasets, you should move images folder and labels folder into dataset folder. Each image must have
+* 2.Organize directories, you should move images folder and labels folder into dataset folder. Each image must have
   corresponding same-name `.txt` label in labels folder. Each label file has several rows, each row represents an
   object, each object has `x,y,w,h,c` five values, which represents `center_x, center_y, width, height, class`. The
   coord value should be normalized to `0~1`
@@ -35,7 +35,7 @@ $ python detect.py -c cfg/yolov1.cfg -d cfg/dataset.cfg -w weights/yolov1.pth --
 * 3.Your dataset folder should be like this:
 
 ```
-dataset/{name}/
+dataset/{dataset name}/
   ├──images
   |   ├──001.png
   |   ├──002.png
@@ -49,8 +49,8 @@ dataset/{name}/
 * 4.Your label `.txt` file should be like this:
 
 ```
-0.253262 0.252352 0.135673 0.524523 0
-0.467335 0.662623 0.265423 0.113139 1
+0.153262 0.252950 0.185673 0.524723 0
+0.467835 0.562623 0.265428 0.113139 1
 ....
 ```
 
@@ -58,8 +58,8 @@ dataset/{name}/
 
 * 1.Edit `cfg/yolov1.cfg` config file, and set **num_classes** according to class number of dataset (this repo
   num_classes=10)
-* 2.Edit `cfg/dataset.cfg` config file, and set **class_names** as class names, **images** as dataset image path, **
-  labels** as dataset label path
+* 2.Edit `cfg/dataset.cfg` config file, and set **class_names** as class names, set **images** as dataset images path,
+  set **labels** as dataset labels path
 * 3.Modify **epochs**, **learning rate**, **batch_size** and other hyper parameters in `train.py` depending on actual
   situations
 * 4.Run `train.py` to train your own yolov1 model:
@@ -76,7 +76,7 @@ $ python train.py --cfg cfg/yolov1.cfg --data cfg/dataset.cfg
 * Validation and test periods are among training process, see train.py for more details
 * You can also imitate `models/model.py` customizing your own model
 
-# Program Structure Introduction
+## Program Structure Introduction
 
 * cfg: some yolo and dataset config files
 * data: some samples and demo jpgs
