@@ -1,7 +1,8 @@
 import numpy as np
 import torch
+import yaml
 
-from models import YOLOv1, YOLOv1ResNet
+from models import YOLOv1
 
 
 def xywhc2label(bboxs, S, B, num_classes):
@@ -21,7 +22,7 @@ def xywhc2label(bboxs, S, B, num_classes):
 
 def pred2xywhcc(pred, S, B, num_classes, conf_thresh, iou_thresh):
     # pred is a 7*7*(5*B+C) tensor, default S=7 B=2
-    bboxs = torch.zeros((S * S * B, 5 + 10))  # 98*15
+    bboxs = torch.zeros((S * S * B, 5 + num_classes))  # 98*15
     for y in range(S):
         for x in range(S):
             # bbox1
@@ -111,15 +112,19 @@ def calculate_iou(bbox1, bbox2):
 
 
 def parse_cfg(cfg_path):
-    cfg = {}
+    # cfg = {}
+    # with open(cfg_path, 'r') as f:
+    #     lines = f.readlines()
+    #     for line in lines:
+    #         if line[0] == '#' or line == '\n':
+    #             continue
+    #         line = line.strip().split(':')
+    #         key, value = line[0].strip(), line[1].strip()
+    #         cfg[key] = value
+
     with open(cfg_path, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            if line[0] == '#' or line == '\n':
-                continue
-            line = line.strip().split(':')
-            key, value = line[0].strip(), line[1].strip()
-            cfg[key] = value
+        cfg = yaml.load(f, Loader=yaml.FullLoader)  # dict
+    print('Config:', cfg)
     return cfg
 
 

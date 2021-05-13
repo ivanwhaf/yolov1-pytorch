@@ -1,0 +1,4 @@
+S: 7
+B: 2
+num_classes: 20
+input_size: 448

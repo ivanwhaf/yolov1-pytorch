@@ -65,8 +65,8 @@ def create_dataloader(img_path, label_path, train_proportion, val_proportion, te
     dataset_size = len(dataset)
     train_size = int(dataset_size * train_proportion)
     val_size = int(dataset_size * val_proportion)
-    test_size = int(dataset_size * test_proportion)
-    # test_size = dataset_size - train_size - val_size
+    # test_size = int(dataset_size * test_proportion)
+    test_size = dataset_size - train_size - val_size
 
     # split dataset to train set, val set and test set three parts
     train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size])

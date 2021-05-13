@@ -5,6 +5,7 @@ numpy
 opencv-python
 pillow
 matplotlib
+PyYaml
 
 # ===optional===
 torchviz

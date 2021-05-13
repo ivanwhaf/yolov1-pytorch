@@ -12,12 +12,12 @@ from utils import create_dataloader, YOLOLoss, parse_cfg, build_model
 # from torchviz import make_dot
 
 parser = argparse.ArgumentParser(description='YOLOv1-pytorch')
-parser.add_argument("--cfg", "-c", default="cfg/yolov1.cfg", help="Yolov1 config file path", type=str)
-parser.add_argument("--dataset_cfg", "-d", default="cfg/dataset.cfg", help="Dataset config file path", type=str)
+parser.add_argument("--cfg", "-c", default="cfg/yolov1.yaml", help="Yolov1 config file path", type=str)
+parser.add_argument("--dataset_cfg", "-d", default="cfg/dataset.yaml", help="Dataset config file path", type=str)
 parser.add_argument("--weights", "-w", default="", help="Pretrained model weights path", type=str)
 parser.add_argument("--output", "-o", default="output", help="Output path", type=str)
 parser.add_argument("--epochs", "-e", default=100, help="Training epochs", type=int)
-parser.add_argument("--lr", "-lr", default=0.001, help="Training learning rate", type=float)
+parser.add_argument("--lr", "-lr", default=0.002, help="Training learning rate", type=float)
 parser.add_argument("--batch_size", "-bs", default=16, help="Training batch size", type=int)
 parser.add_argument("--input_size", "-is", default=448, help="Image input size", type=int)
 parser.add_argument("--save_freq", "-sf", default=10, help="Frequency of saving model checkpoint when training",
@@ -29,6 +29,7 @@ def train(model, train_loader, optimizer, epoch, device, S, B, train_loss_lst):
     model.train()  # Set the module in training mode
     train_loss = 0
     for batch_idx, (inputs, labels) in enumerate(train_loader):
+        t_start = time.time()
         inputs, labels = inputs.to(device), labels.to(device)
         outputs = model(inputs)
 
@@ -39,6 +40,7 @@ def train(model, train_loader, optimizer, epoch, device, S, B, train_loss_lst):
         loss.backward()
         optimizer.step()
         train_loss += loss.item()
+        t_batch = time.time() - t_start
 
         # show batch0 dataset
         if batch_idx == 0 and epoch == 0:
@@ -51,10 +53,10 @@ def train(model, train_loader, optimizer, epoch, device, S, B, train_loss_lst):
             plt.close(fig)
 
         # print loss and accuracy
-        if batch_idx % 5 == 0:
-            print('Train Epoch: {} [{}/{} ({:.1f}%)]  Loss: {:.6f}'
+        if batch_idx % 10 == 0:
+            print('Train Epoch: {} [{}/{} ({:.1f}%)]  Time: {:.4f}s  Loss: {:.6f}'
                   .format(epoch, batch_idx * len(inputs), len(train_loader.dataset),
-                          100. * batch_idx / len(train_loader), loss.item()))
+                          100. * batch_idx / len(train_loader), t_batch, loss.item()))
 
     # record training loss
     train_loss /= len(train_loader)
@@ -105,7 +107,7 @@ if __name__ == "__main__":
     cfg = parse_cfg(args.cfg)
     dataset_cfg = parse_cfg(args.dataset_cfg)
     img_path, label_path = dataset_cfg['images'], dataset_cfg['labels']
-    S, B, num_classes = int(cfg['S']), int(cfg['B']), int(cfg['num_classes'])
+    S, B, num_classes = cfg['S'], cfg['B'], cfg['num_classes']
 
     # create output file folder
     start = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime(time.time()))

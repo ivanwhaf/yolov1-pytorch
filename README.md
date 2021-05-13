@@ -10,7 +10,7 @@ This repo is a pytorch implementation of yolov1.
 
 ## Run in command line
 
-*detect.py* runs inference on a variety of sources, cd your project path and type:
+`detect.py` runs inference on a variety of sources, cd your project path and type:
 
 ```bash
 $ python detect.py -c cfg/yolov1.cfg -d cfg/dataset.cfg -w weights/yolov1.pth --source 0  # webcam
@@ -20,7 +20,7 @@ $ python detect.py -c cfg/yolov1.cfg -d cfg/dataset.cfg -w weights/yolov1.pth --
                                                                                        path/*.mp4 # video folder path
 ```
 
-![image](https://github.com/ivanwhaf/yolov1-pytorch/blob/master/data/test_demo.jpg)
+![image](https://github.com/ivanwhaf/yolov1-pytorch/blob/master/data/samples/test_predict.jpg)
 
 # Usage
 
@@ -56,11 +56,11 @@ dataset/{dataset name}/
 
 ## Train
 
-* 1.Edit `cfg/yolov1.cfg` config file, and set **num_classes** according to class number of dataset (this repo
+* 1.Edit `cfg/yolov1.yaml` config file, and set **num_classes** according to class number of dataset (this repo
   num_classes=10)
-* 2.Edit `cfg/dataset.cfg` config file, and set **class_names** as class names, set **images** as dataset images path,
+* 2.Edit `cfg/dataset.yaml` config file, and set **class_names** as class names, set **images** as dataset images path,
   set **labels** as dataset labels path
-* 3.Modify **epochs**, **learning rate**, **batch_size** and other hyper parameters in `train.py` depending on actual
+* 3.Modify **epochs**, **learning rate**, **batch size** and other hyper parameters in `train.py` depending on actual
   situations
 * 4.Run `train.py` to train your own yolov1 model:
 

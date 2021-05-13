@@ -131,3 +131,6 @@ dmypy.json
 .idea/
 output/
 test.py
+
+dataset/NWPU VHR-10 dataset
+dataset/VOC2007

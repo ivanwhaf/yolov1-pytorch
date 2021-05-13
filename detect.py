@@ -12,11 +12,11 @@ from utils import parse_cfg, pred2xywhcc, build_model
 
 parser = argparse.ArgumentParser(description='YOLOv1 Pytorch Implementation')
 parser.add_argument("--weights", "-w", default="weights/last.pth", help="Path of model weight", type=str)
-parser.add_argument("--source", "-s", default="dataset/NWPU VHR-10 dataset/positive image set",
+parser.add_argument("--source", "-s", default="dataset/VOC2007/JPEGImages",
                     help="Path of your input file source,0 for webcam", type=str)
 parser.add_argument('--output', "-o", default='output', help='Output folder', type=str)
-parser.add_argument("--cfg", "-c", default="cfg/yolov1.cfg", help="Your model config path", type=str)
-parser.add_argument("--dataset_cfg", "-d", default="cfg/dataset.cfg", help="Your dataset config path", type=str)
+parser.add_argument("--cfg", "-c", default="cfg/yolov1.yaml", help="Your model config path", type=str)
+parser.add_argument("--dataset_cfg", "-d", default="cfg/dataset.yaml", help="Your dataset config path", type=str)
 parser.add_argument('--cam_width', "-cw", default=848, help='camera width', type=int)
 parser.add_argument('--cam_height', "-ch", default=480, help='camera height', type=int)
 parser.add_argument('--conf_thresh', "-ct", default=0.1, help='prediction confidence thresh', type=float)
@@ -24,7 +24,7 @@ parser.add_argument('--iou_thresh', "-it", default=0.3, help='prediction iou thr
 args = parser.parse_args()
 
 # random colors
-COLORS = [[random.randint(0, 255) for _ in range(3)] for _ in range(10)]
+COLORS = [[random.randint(0, 255) for _ in range(3)] for _ in range(100)]
 
 
 def draw_bbox(img, bboxs, class_names):
@@ -71,11 +71,11 @@ def predict_img(img, model, input_size, S, B, num_classes, conf_thresh, iou_thre
 if __name__ == "__main__":
     # load configs from config file
     cfg = parse_cfg(args.cfg)
-    input_size = int(cfg['input_size'])
+    input_size = cfg['input_size']
     dataset_cfg = parse_cfg(args.dataset_cfg)
-    class_names = dataset_cfg['class_names'].split(',')
+    class_names = dataset_cfg['class_names']
     print('Class names:', class_names)
-    S, B, num_classes = int(cfg['S']), int(cfg['B']), int(cfg['num_classes'])
+    S, B, num_classes = cfg['S'], cfg['B'], cfg['num_classes']
     conf_thresh, iou_thresh, source = args.conf_thresh, args.iou_thresh, args.source
 
     # load model
