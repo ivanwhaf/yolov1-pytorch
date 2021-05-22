@@ -1,1 +1,1 @@
-from .model import YOLOv1, YOLOv1ResNet
+from .yolov1 import YOLOv1, YOLOv1ResNet

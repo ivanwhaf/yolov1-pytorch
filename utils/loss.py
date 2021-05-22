@@ -4,14 +4,14 @@ from torch import nn
 from .util import calculate_iou
 
 
-class YOLOLoss(nn.Module):
+class YOLOv1Loss(nn.Module):
     def __init__(self, S, B):
         super().__init__()
         self.S = S
         self.B = B
 
     def forward(self, preds, labels):
-        batch_size = labels.size()[0]
+        batch_size = labels.size(0)
 
         loss_coord_xy = 0.  # coord xy loss
         loss_coord_wh = 0.  # coord wh loss
@@ -20,8 +20,8 @@ class YOLOLoss(nn.Module):
         loss_class = 0.  # class loss
 
         for i in range(batch_size):
-            for x in range(self.S):
-                for y in range(self.S):
+            for y in range(self.S):
+                for x in range(self.S):
                     # this region has object
                     if labels[i, y, x, 4] == 1:
 
@@ -50,50 +50,46 @@ class YOLOLoss(nn.Module):
                         # judge responsible box
                         if iou1 > iou2:
                             # calculate coord xy loss
-                            loss_coord_xy += 5 * torch.sum((preds[i, y, x, 0:2] - labels[i, y, x, 0:2]) ** 2)
+                            loss_coord_xy += 5 * torch.sum((labels[i, y, x, 0:2] - preds[i, y, x, 0:2]) ** 2)
 
                             # coord wh loss
-                            loss_coord_wh += torch.sum((preds[i, y, x, 2:4].sqrt() - labels[i, y, x, 2:4].sqrt()) ** 2)
+                            loss_coord_wh += torch.sum((labels[i, y, x, 2:4].sqrt() - preds[i, y, x, 2:4].sqrt()) ** 2)
 
                             # obj confidence loss
-                            loss_obj += (preds[i, y, x, 4] - iou1) ** 2
+                            loss_obj += (iou1 - preds[i, y, x, 4]) ** 2
                             # loss_obj += (preds[i, y, x, 4] - 1) ** 2
 
                             # no obj confidence loss
-                            loss_no_obj += 0.5 * ((preds[i, y, x, 9] - iou2) ** 2)
+                            loss_no_obj += 0.5 * ((0 - preds[i, y, x, 9]) ** 2)
                             # loss_no_obj += 0.5 * ((preds[i, y, x, 9] - 0) ** 2)
                         else:
                             # coord xy loss
-                            loss_coord_xy += 5 * torch.sum((preds[i, y, x, 5:7] - labels[i, y, x, 5:7]) ** 2)
+                            loss_coord_xy += 5 * torch.sum((labels[i, y, x, 5:7] - preds[i, y, x, 5:7]) ** 2)
 
                             # coord wh loss
-                            loss_coord_wh += torch.sum((preds[i, y, x, 7:9].sqrt() - labels[i, y, x, 7:9].sqrt()) ** 2)
+                            loss_coord_wh += torch.sum((labels[i, y, x, 7:9].sqrt() - preds[i, y, x, 7:9].sqrt()) ** 2)
 
                             # obj confidence loss
-                            loss_obj += (preds[i, y, x, 9] - iou2) ** 2
+                            loss_obj += (iou2 - preds[i, y, x, 9]) ** 2
                             # loss_obj += (preds[i, y, x, 9] - 1) ** 2
 
                             # no obj confidence loss
-                            loss_no_obj += 0.5 * ((preds[i, y, x, 4] - iou1) ** 2)
+                            loss_no_obj += 0.5 * ((0 - preds[i, y, x, 4]) ** 2)
                             # loss_no_obj += 0.5 * ((preds[i, y, x, 4] - 0) ** 2)
 
                         # class loss
-                        loss_class += torch.sum((preds[i, y, x, 10:] - labels[i, y, x, 10:]) ** 2)
+                        loss_class += torch.sum((labels[i, y, x, 10:] - preds[i, y, x, 10:]) ** 2)
 
                     # this region has no object
                     else:
-                        loss_no_obj += 0.5 * torch.sum(preds[i, y, x, [4, 9]] ** 2)
+                        loss_no_obj += 0.5 * torch.sum((0 - preds[i, y, x, [4, 9]]) ** 2)
 
                     # end labels have object
                 # end for x
             # end for y
         # end for batch size
 
-        # print('loss_coord_xy', loss_coord_xy)
-        # print('loss_coord_wh', loss_coord_wh)
-        # print('loss_coord_wh', loss_obj)
-        # print('loss_coord_wh', loss_no_obj)
-        # print('loss_coord_wh', loss_class)
+        # print(loss_coord_xy, loss_coord_wh, loss_obj, loss_no_obj, loss_class)
 
         loss = loss_coord_xy + loss_coord_wh + loss_obj + loss_no_obj + loss_class  # five loss terms
         return loss / batch_size
