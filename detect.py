@@ -27,7 +27,7 @@ args = parser.parse_args()
 COLORS = [[random.randint(0, 255) for _ in range(3)] for _ in range(100)]
 
 
-def  draw_bbox(img, bboxs, class_names):
+def draw_bbox(img, bboxs, class_names):
     h, w = img.shape[0:2]
     n = bboxs.size()[0]
     bboxs = bboxs.detach().numpy()

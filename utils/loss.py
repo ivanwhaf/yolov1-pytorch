@@ -24,7 +24,6 @@ class YOLOv1Loss(nn.Module):
                 for x in range(self.S):
                     # this region has object
                     if labels[i, y, x, 4] == 1:
-
                         # convert x,y to x,y
                         # pred_bbox1 = torch.Tensor(
                         #     [(preds[i, x, y, 0] + x) / 7, (preds[i, x, y, 1] + y) / 7, preds[i, x, y, 2],
@@ -85,8 +84,8 @@ class YOLOv1Loss(nn.Module):
                         loss_no_obj += 0.5 * torch.sum((0 - preds[i, y, x, [4, 9]]) ** 2)
 
                     # end labels have object
-                # end for x
-            # end for y
+                # end for y
+            # end for x
         # end for batch size
 
         # print(loss_coord_xy, loss_coord_wh, loss_obj, loss_no_obj, loss_class)

@@ -6,7 +6,7 @@ from models import YOLOv1
 
 
 def xywhc2label(bboxs, S, B, num_classes):
-    # bboxs is a xywhc list: [(x,y,w,h,c),(x,y,w,h,c)....]
+    # bboxs is a xywhc list: [(x,y,w,h,c),(x,y,w,h,c),....]
     label = np.zeros((S, S, 5 * B + num_classes))
     for x, y, w, h, c in bboxs:
         x_grid = int(x // (1.0 / S))
@@ -76,14 +76,14 @@ def pred2xywhcc(pred, S, B, num_classes, conf_thresh, iou_thresh):
                 bboxs[(x * S + y), 5:] = pred[x, y, 10:]
 
     # apply NMS to all bboxs
-    xywhcc = nms(bboxs, S, B, num_classes, conf_thresh, iou_thresh)
+    xywhcc = nms(bboxs, num_classes, conf_thresh, iou_thresh)
     return xywhcc
 
 
-def nms(bboxs, S, B, num_classes, conf_thresh=0.1, iou_thresh=0.3):
+def nms(bboxs, num_classes, conf_thresh=0.1, iou_thresh=0.3):
     # Non-Maximum Suppression, bboxs is a 98*15 tensor
-    bbox_prob = bboxs[:, 5:].clone()  # 98*10
-    bbox_conf = bboxs[:, 4].clone().unsqueeze(1).expand_as(bbox_prob)  # 98*10
+    bbox_prob = bboxs[:, 5:].clone().detach()  # 98*10
+    bbox_conf = bboxs[:, 4].clone().detach().unsqueeze(1).expand_as(bbox_prob)  # 98*10
     bbox_cls_spec_conf = bbox_conf * bbox_prob  # 98*10
     bbox_cls_spec_conf[bbox_cls_spec_conf <= conf_thresh] = 0
 
@@ -91,10 +91,10 @@ def nms(bboxs, S, B, num_classes, conf_thresh=0.1, iou_thresh=0.3):
     for c in range(num_classes):
         rank = torch.sort(bbox_cls_spec_conf[:, c], descending=True).indices  # sort conf
         # for each bbox
-        for i in range(S * S):
+        for i in range(bboxs.shape[0]):
             if bbox_cls_spec_conf[rank[i], c] == 0:
                 continue
-            for j in range(i + 1, S * S):
+            for j in range(i + 1, bboxs.shape[0]):
                 if bbox_cls_spec_conf[rank[j], c] != 0:
                     iou = calculate_iou(bboxs[rank[i], 0:4], bboxs[rank[j], 0:4])
                     if iou > iou_thresh:

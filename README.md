@@ -30,7 +30,7 @@ $ python detect.py -c cfg/yolov1.cfg -d cfg/dataset.cfg -w weights/yolov1.pth --
 * 2.Organize directories, you should move images folder and labels folder into dataset folder. Each image must have
   corresponding same-name `.txt` label in labels folder. Each label file has several rows, each row represents an
   object, each object has `x,y,w,h,c` five values, which represents `center_x, center_y, width, height, class`. The
-  coord value should be normalized to `0~1`
+  coord value should be normalized to `0~1`  
   ![image](https://github.com/ivanwhaf/yolov1-pytorch/blob/master/data/xywh.jpg)
 * 3.Your dataset folder should be like this:
 
